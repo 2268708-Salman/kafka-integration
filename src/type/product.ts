@@ -1,3 +1,21 @@
+interface ConfigurableField {
+  name: string;
+  value: string;
+  display_name?: string;
+}
+
+interface ProductOption {
+  id: number;
+  option_id: number;
+  order_product_id: number;
+  product_option_id: number;
+  display_name: string;
+  display_value: string;
+  value: string;
+  type: string;
+  name: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -23,6 +41,6 @@ export interface Product {
   refund_amount?: number;
   return_id?: number;
   type?: string;
-  configurable_fields?: any[];
-  product_options?: any[];
+  configurable_fields?: ConfigurableField[];
+  product_options?: ProductOption[];
 }
