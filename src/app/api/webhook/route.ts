@@ -1,35 +1,18 @@
 /* eslint-disable no-console */
 import { NextResponse } from 'next/server';
+import { Product } from '@/type/product';
 
 import {
   fetchOrder,
   fetchOrderProducts,
   fetchCustomer,
+  fetchCustomerRole,
   updateOrderStatus,
   fetchCompanyDetailsByName, 
   extractMetafields,
+  updateInventoryDetails,
 } from '../../lib/bigcommerce/api';
 
- 
-type Product = {
-  name: string;
-  name_customer: string;
-  name_merchant: string;
-  product_id: number;
-  variant_id:number;  
-  sku: string;
-  quantity: number;
-  is_refunded: boolean;
-  quantity_refunded: number;
-  refund_amount: DoubleRange;
-  return_id:number;
-  base_price: string;
-  base_total: string;
-  total_ex_tax:  string;
-  total_inc_tax: string;
-
-};
- 
  
 type Fee = {
   name: string;
@@ -76,8 +59,6 @@ type BillingAddress ={
 
 }
  
-// Webhook endpoint for BigCommerce order processing
-// Trigger a new deployment on Vercel
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -126,8 +107,26 @@ const productDetails = products.map(product => ({
   const fetchedCustomer = await fetchCustomer(order.customer_id);
   const userDetails: Customer = fetchedCustomer;
   const companyName = userDetails.company;
-  console.log('User Response', fetchedCustomer);
+  console.log('User Reponse', fetchedCustomer);
   console.log('company Name:',companyName);
+
+//   // To Get the Buyer Roles :::: 
+
+//   const fetchedBuyerRoles = await fetchCustomerRole(order.customer_id);
+//   const userCompany : Customer = fetchedBuyerRoles;
+//   console.log('UserResponse:', fetchedBuyerRoles);
+//   console.log('RoleID',userCompany.company, userCompany.companyRoleId );
+
+
+// // Update the Order status if its Junior Buyer
+
+// if(userCompany.companyRoleId ===22405){
+//   console.log("In Update Order Method")
+//   const status =1;
+//   const customer_message="Order submitted by Junior Buyer, awaiting Senior Buyer approval."
+//   const orderStatusUpdate = await updateOrderStatus(orderId,status,customer_message);
+//   console.log("Order Status Update",orderStatusUpdate);
+// }
 
 
 const companyDetails = await fetchCompanyDetailsByName(companyName);
@@ -135,26 +134,42 @@ console.log('Company Details:', companyDetails);
 
 let e8field;
 let e8fieldName ;
+let warehouseId ;
 const metafields = extractMetafields(companyDetails);
 metafields.forEach(({ name, value }) => {
 
-  if(name=='E8 Company'){
+  if(name=='E8 COMPANY ID'){
      e8field = value;
      e8fieldName = name;
+  }
+
+  if(name =='Warehouse'){
+    warehouseId=value;
   }
   console.log(`Metafield: ${name} = ${value}`);
 });
 
 console.log('Entire Company Details',companyDetails);
     
+
 const updatedOrderDetails = await fetchOrder(orderId);
 const Updatedorder: Order = updatedOrderDetails;
 console.log('Updated Order Details:', Updatedorder);
 
+console.log('warehouseId:',warehouseId);
+
 const customerDetails = {
    companyName: companyDetails.companyName,
    e8CompanyId: e8field,
+   warehouseId: parseInt(warehouseId ?? ""),
  };
+
+// To update Inventory 
+const inventoryResponse = await updateInventoryDetails(products, customerDetails.warehouseId);
+
+console.log("Updated inventory response")
+
+
 
 const OrderDetails = {
     ...Updatedorder,
