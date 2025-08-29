@@ -82,6 +82,42 @@ export async function GET(req: Request) {
   });
 }
 
+// Add PUT handler
+export async function PUT(req: Request) {
+  console.log('PUT request received for webhook');
+  return NextResponse.json({ 
+    success: true, 
+    message: 'PUT method handled',
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Add PATCH handler
+export async function PATCH(req: Request) {
+  console.log('PATCH request received for webhook');
+  return NextResponse.json({ 
+    success: true, 
+    message: 'PATCH method handled',
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Add DELETE handler
+export async function DELETE(req: Request) {
+  console.log('DELETE request received for webhook');
+  return NextResponse.json({ 
+    success: true, 
+    message: 'DELETE method handled',
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Add HEAD handler
+export async function HEAD(req: Request) {
+  console.log('HEAD request received for webhook');
+  return new NextResponse(null, { status: 200 });
+}
+
 export async function POST(req: Request) {
   try {
     console.log('POST request received at webhook endpoint');
