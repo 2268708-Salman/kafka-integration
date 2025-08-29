@@ -59,8 +59,36 @@ type BillingAddress ={
 
 }
  
+// Add OPTIONS handler for CORS preflight requests
+export async function OPTIONS(req: Request) {
+  console.log('OPTIONS request received for webhook');
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
+// Add GET handler to debug requests
+export async function GET(req: Request) {
+  console.log('GET request received for webhook - BigCommerce might be testing the endpoint');
+  return NextResponse.json({ 
+    success: true, 
+    message: 'Webhook endpoint is active',
+    timestamp: new Date().toISOString()
+  });
+}
+
 export async function POST(req: Request) {
   try {
+    console.log('POST request received at webhook endpoint');
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    console.log('Request URL:', req.url);
+    
     const body = await req.json();
     console.log('Webhook Payload:', body);
  
@@ -190,6 +218,11 @@ console.log("Merged Output",OrderDetails);
  
   } catch (error) {
     console.error('Error in webhook:', error);
-    return NextResponse.json({ success: false, error: (error as Error).message });
+    console.error('Error stack:', (error as Error).stack);
+    return NextResponse.json({ 
+      success: false, 
+      error: (error as Error).message,
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
